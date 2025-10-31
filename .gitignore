@@ -2,3 +2,5 @@ build/bin
 node_modules
 /go-build.bat
 /.idea
+/frontend/dist/index.html
+/frontend/dist/assets
