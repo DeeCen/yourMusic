@@ -230,7 +230,7 @@ const startCD = () => {
         sendCodeCD.value--;
     },1000);
 };
-startCD();
+
 const showLoginDialog = () => {
     isLoginDialogVisible.value = true;
 };
@@ -335,6 +335,9 @@ const isGetVip = isAutoGetVipDay();
 if (readUserInfoFromLocalStorage() && isGetVip) {
     loginByToken(true);//每天只刷新一次token
     setLastAutoGetVipDay();
+}
+if (userInfo.token==='') {
+    showLoginDialog();
 }
 </script>
 

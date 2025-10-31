@@ -9,5 +9,11 @@
   "author": {
     "name": "Dee",
     "email": ""
+  },
+  "info": {
+    "companyName": "yourMusic",
+    "productName": "yourMusic",
+    "productVersion": "0.1.0",
+    "copyright": "Copyright (c) 2025 yourMusic"
   }
 }
