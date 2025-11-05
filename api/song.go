@@ -14,10 +14,12 @@ type SongQuality string
 const (
     // SongQuality128 128K
     SongQuality128 SongQuality = `128`
+
     // SongQuality320 320K
-    SongQuality320 SongQuality = `320`
+    //SongQuality320 SongQuality = `320`
     // SongQualityFlac flac
-    SongQualityFlac SongQuality = `flac`
+    //SongQualityFlac SongQuality = `flac`
+
     // SongQualityHiRes high
     SongQualityHiRes SongQuality = `high`
 )
@@ -25,11 +27,12 @@ const (
 // RespAPISongURL 获取歌曲url响应
 type RespAPISongURL struct {
     FileSize int32    `json:"fileSize,omitempty"`
+    FileName string   `json:"fileName,omitempty"`
     URL      []string `json:"url,omitempty"`
 }
 
 // GetSongURL 获取歌曲URL
-func GetSongURL(dfid, userid, token, albumAudioId, albumId, hash string, quality SongQuality) (ret []string, size int32, err error) {
+func GetSongURL(dfid, userid, token, albumAudioId, albumId, hash string, quality SongQuality) (fileName string, URLList []string, size int32, err error) {
     if userid == `` || userid == `0` || token == `` {
         err = errors.New(`请先登录再获取歌曲信息`)
         return
@@ -91,9 +94,10 @@ func GetSongURL(dfid, userid, token, albumAudioId, albumId, hash string, quality
         return
     }
 
-    ret = resp.URL // 不是vip时可能会空
+    fileName = resp.FileName
+    URLList = resp.URL // 不是vip时可能会空
     size = resp.FileSize
-    if len(ret) <= 0 {
+    if len(URLList) <= 0 {
         err = errors.New(`获取失败,可能权限不足`)
         if strings.Contains(string(body), `"priv_status":0`) {
             err = errors.New(`此歌曲暂无版权`)

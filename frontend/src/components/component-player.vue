@@ -49,7 +49,7 @@
       >
         <template #default="scope">
           <el-row :gutter="1">
-            <el-col :span="8">
+            <el-col :span="6">
               <el-button
                 circle
                 size="small"
@@ -60,7 +60,7 @@
               </el-button>
             </el-col>
 
-            <el-col :span="8">
+            <el-col :span="6">
               <el-button
                 circle
                 size="small"
@@ -71,7 +71,7 @@
               </el-button>
             </el-col>
 
-            <el-col :span="8">
+            <el-col :span="6">
               <el-button
                 circle
                 size="small"
@@ -79,6 +79,20 @@
                 @click="copySongURL(scope.row)"
               >
                 <el-icon><CopyDocument /></el-icon>
+              </el-button>
+            </el-col>
+
+            <el-col
+              :span="6"
+            >
+              <el-button
+                circle
+                size="small"
+                type="success"
+                color="#0c8918"
+                @click="downloadSong(scope.row)"
+              >
+                <el-icon><Download /></el-icon>
               </el-button>
             </el-col>
           </el-row>
@@ -100,13 +114,14 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, toRaw, watch } from 'vue';
 import APlayer from 'aplayer';
 import 'aplayer/dist/APlayer.min.css';
 import {
     Document,
     CopyDocument,
     Delete,
+    Download,
     VideoPlay
 } from '@element-plus/icons-vue';
 import {
@@ -115,13 +130,15 @@ import {
     userInfo,
     getUserSelectQuality,
     savePlayListDelay,
-    getSongHash
+    getSongHash,
+    downloadSong
 } from './sharedVar.js';
 import { GetSongURL } from '@/wailsjs/go/main/App';
 import { autoShowLyric, parseLyric } from '@/src/components/lyric.js';
 import { addBgColor } from '@/src/components/bgColor.js';
 import { ElMessage } from 'element-plus';
 import { WindowSetTitle } from '@/wailsjs/runtime/runtime.js';
+
 const pageSize = 10;
 
 /** @type {APlayer} */
@@ -153,16 +170,19 @@ const showPlaylist = () => {
 
 // 自定义播放列表翻页函数
 const changePlaylistPage = (page) => {
-    const s = Math.max(0,page-1)*pageSize;
-    if (s>=playSongList.value.length) {
+    const s = Math.max(0, page - 1) * pageSize;
+
+    if (s >= playSongList.value.length) {
         showPlaylistData.value = [];
+
         return;
     }
 
     showPlaylistPage.value = page;
-    const showPageList = playSongList.value.slice(s, s+pageSize);
+    const showPageList = playSongList.value.slice(s, s + pageSize);
+
     for (let i = 0; i < showPageList.length; i++) {
-        showPageList[i]['idx'] = s+i+1;
+        showPageList[i]['idx'] = s + i + 1;
     }
     showPlaylistData.value = showPageList;
 };
@@ -171,19 +191,22 @@ const changePlaylistPage = (page) => {
 const findIdxFromPlayerList = (song) => {
     /** @type {api.Song[]} */
     const audios = getAPlayerList().audios;
+
     for (const songKey in audios) {
-        if (audios[songKey].FileHash===song.FileHash) {
+        if (audios[songKey].FileHash === song.FileHash) {
             return songKey;
         }
     }
+
     return -1;
 };
 
 // 切换播放此歌曲
 const playSong = (song) => {
     const idx = findIdxFromPlayerList(song);
-    console.log(`playSong`,song,idx);
-    if (idx>=0) {
+
+    console.log(`playSong`, song, idx);
+    if (idx >= 0) {
         getAPlayerList().switch(idx);
     }
 };
@@ -198,8 +221,9 @@ const removeSong = (song) => {
 const removePlaySongList = (song) => {
     for (let i = 0; i < playSongList.value.length; i++) {
         const curSong = playSongList.value[i];
-        if (curSong.FileHash===song.FileHash) {
-            playSongList.value.splice(i,1);
+
+        if (curSong.FileHash === song.FileHash) {
+            playSongList.value.splice(i, 1);
             break;
         }
     }
@@ -209,8 +233,9 @@ const removePlaySongList = (song) => {
 const removeShowPlaylistPage = (song) => {
     for (let i = 0; i < showPlaylistData.value.length; i++) {
         const curSong = showPlaylistData.value[i];
-        if (curSong.FileHash===song.FileHash) {
-            showPlaylistData.value.splice(i,1);
+
+        if (curSong.FileHash === song.FileHash) {
+            showPlaylistData.value.splice(i, 1);
             break;
         }
     }
@@ -226,16 +251,18 @@ const syncPlaySongListToPlayer = () => {
 
     for (let i = 0; i < playSongList.value.length; i++) {
         const song = playSongList.value[i];
-        hasMap.set(song.FileHash, song);
+
+        hasMap.set(song.FileHash, toRaw(song));
     }
 
     /**
      * 播放器删除使用下标,如果正向删除下标会对不上
      * 这里使用反向遍历删除
      */
-    for (let i = playerAudios.length-1; i>=0 ; i--) {
+    for (let i = playerAudios.length - 1; i >= 0; i--) {
         /** @type {api.Song} */
         const hash = playerAudios[i].FileHash;
+
         if (!hasMap.has(hash)) {
             playerList.remove(i); // 纪录播放器要删除的
         } else {
@@ -265,32 +292,43 @@ const customGetSongURL = async function (audioElement, audio, player) {
     console.log('1 执行更新获取歌曲地址', audio.name);
     const quality = getUserSelectQuality();
     const hash = getSongHash(audio, quality);
-    if (audio.url==='' || hash!==audio.urlHash) {
+
+    if (audio.url === '' || hash !== audio.urlHash) {
         console.log('2 执行更新获取歌曲地址', audio.name, quality, hash);
         const resp = await GetSongURL(userInfo.dfid, userInfo.userid, userInfo.token, hash);
+
         console.log('3 执行更新获取歌曲地址', audio.name, resp);
         let errMsg = ``;
+
         if (resp.errMsg) {
             aPlayerGetAudioErrCount++;
-            errMsg = '获取播放地址错误:'+resp.errMsg;
-        } else if (!resp.data || resp.data.length===0) {
+            errMsg = '获取播放地址错误:' + resp.errMsg;
+        } else if (!resp.data || resp.data.length === 0) {
             aPlayerGetAudioErrCount++;
             errMsg = '获取播放地址失败,切换到下一首歌曲';
         }
 
-        if (aPlayerGetAudioErrCount>5) {
+        if (aPlayerGetAudioErrCount > 5) {
             ElMessage.error(`获取地址多次出错,已暂停播放`);
             try {
                 player.pause();
             } catch (e) {
-                console.log('call player.pause err',e);
+                console.log('call player.pause err', e);
             }
+
             return;
         }
 
-        if (errMsg!=='') {
+        if (errMsg !== '') {
             ElMessage.warning(errMsg);
-            player.skipForward();
+            if (player && typeof player.skipForward === 'function') {
+                try {
+                    player.skipForward();
+                } catch (e) {
+                    console.log('call player.skipForward err', e);
+                }
+            }
+
             return;
         }
 
@@ -300,8 +338,9 @@ const customGetSongURL = async function (audioElement, audio, player) {
         audio.urlHash = hash;
         audio.lrc = parseLyric(resp.lyric);
 
-        const size = resp.size>0 ? (resp.size/1024/1024).toFixed(2):'0';
-        console.log('4 执行更新获取歌曲地址',audio.name, audio.url, size+' MB');
+        const size = resp.size > 0 ? (resp.size / 1024 / 1024).toFixed(2) : '0';
+
+        console.log('4 执行更新获取歌曲地址', audio.name, audio.url, size + ' MB');
     }
 
     // 动态更新地址和歌词
@@ -309,15 +348,18 @@ const customGetSongURL = async function (audioElement, audio, player) {
     autoShowLyric(audio.lrc, player);
     addBgColor('app');
     WindowSetTitle(audio.name);
-    try {
-        player.play();
-    } catch (e) {
-        console.log('call player.play err',e);
+    console.log('player debug', player.play, typeof player.play);
+    if (player && typeof player.play === 'function') {
+        try {
+            player.play();
+        } catch (e) {
+            console.log('call player.play err', e);
+        }
     }
 };
 
 // 自动同步播放列表到播放器
-watch(playSongList, syncPlaySongListToPlayer,{ deep: true });
+watch(playSongList, syncPlaySongListToPlayer, { deep: true });
 
 // 启动
 onMounted(() => {
@@ -361,6 +403,7 @@ onMounted(() => {
     font-size: 24px;
     cursor: pointer;
 }
+
 .playListAnimate{
     animation: pulse 1s ease-in-out infinite;
 }

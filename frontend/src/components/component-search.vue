@@ -43,7 +43,7 @@
       >
         <template #default="scope">
           <el-row :gutter="1">
-            <el-col :span="12">
+            <el-col :span="8">
               <el-button
                 circle
                 size="small"
@@ -54,7 +54,7 @@
               </el-button>
             </el-col>
 
-            <el-col :span="12">
+            <el-col :span="8">
               <el-button
                 circle
                 size="small"
@@ -62,6 +62,20 @@
                 @click="copySongURL(scope.row)"
               >
                 <el-icon><CopyDocument /></el-icon>
+              </el-button>
+            </el-col>
+
+            <el-col
+              :span="8"
+            >
+              <el-button
+                circle
+                size="small"
+                type="success"
+                color="#0c8918"
+                @click="downloadSong(scope.row)"
+              >
+                <el-icon><Download /></el-icon>
               </el-button>
             </el-col>
           </el-row>
@@ -84,8 +98,13 @@
 <script setup>
 import { SearchMusic } from '@/wailsjs/go/main/App.js';
 import { computed, ref } from 'vue';
-import { CopyDocument, Search as SearchIcon } from '@element-plus/icons-vue';
-import { playSongList, userInfo, copySongURL, fixSongForPlayer } from './sharedVar.js';
+import { CopyDocument, Search as SearchIcon,Download } from '@element-plus/icons-vue';
+import { playSongList,
+    userInfo,
+    copySongURL,
+    fixSongForPlayer,
+    downloadSong
+} from './sharedVar.js';
 import { ElMessage } from 'element-plus';
 
 const pageSize = 10;

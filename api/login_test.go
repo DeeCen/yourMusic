@@ -6,8 +6,8 @@ import (
 )
 
 const testMobile = `13800138001`
-const testUserId = `2089100744`
-const testUserToken = `387accb2c7a60ae8573bcb8d4c23839593ae2074639ed28569ed8df2a45f7a37`
+const testUserId = `0`
+const testUserToken = ``
 
 func TestSendMobileCode(t *testing.T) {
     err := SendMobileCode(testMobile)

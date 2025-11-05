@@ -3,14 +3,32 @@ package main
 
 import (
     "context"
+    "os"
+    "path/filepath"
     "strconv"
     "strings"
+    "time"
     "yourMusic/api"
 )
 
+func getSaveDir() (ret string) {
+    ret = `./`
+
+    if dir, e1 := os.Executable(); e1 == nil {
+        ret = filepath.Dir(dir)
+    }
+
+    if absDir, e2 := filepath.Abs(ret); e2 == nil {
+        ret = strings.ReplaceAll(absDir, `\`, `/`)
+    }
+
+    return
+}
+
 // App struct
 type App struct {
-    ctx context.Context
+    ctx     context.Context
+    SaveDir string
 }
 
 // NewApp creates a new App application struct
@@ -22,6 +40,7 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
     a.ctx = ctx
+    a.SaveDir = getSaveDir()
 }
 
 // RespSearch 搜索响应格式
@@ -121,7 +140,7 @@ type RespGetSongURL struct {
 func (a *App) GetSongURL(dfid, userid, token string, fileHashAll string) (ret RespGetSongURL) {
     hashArr := strings.SplitN(fileHashAll, `,`, 3)
     for _, hash := range hashArr {
-        list, size, err := api.GetSongURL(dfid, userid, token, `0`, `0`, hash, api.SongQualityHiRes)
+        _, list, size, err := api.GetSongURL(dfid, userid, token, `0`, `0`, hash, api.SongQualityHiRes)
         if err == nil && len(list) > 0 {
             ret.ErrMsg = ``
             ret.Size = size
@@ -165,4 +184,38 @@ func (a *App) GetSongURL(dfid, userid, token string, fileHashAll string) (ret Re
 
        return
     */
+}
+
+// RespMsg 响应直接弹出信息
+type RespMsg struct {
+    IsSuccess bool   `json:"is_success"`
+    Msg       string `json:"msg"`
+}
+
+// DownloadSong 直接下载歌曲
+func (a *App) DownloadSong(dfid, userid, token string, fileHashAll, saveName string) (ret RespMsg) {
+    hashArr := strings.SplitN(fileHashAll, `,`, 3)
+    for _, hash := range hashArr {
+        fileName, list, _, err := api.GetSongURL(dfid, userid, token, `0`, `0`, hash, api.SongQualityHiRes)
+        if saveName == `` {
+            saveName = fileName
+        }
+
+        if err == nil && len(list) > 0 && list[0] != `` {
+            url := list[0]
+            saveFile := a.SaveDir + `/` + strings.TrimSpace(saveName) + filepath.Ext(url)
+            ret.Msg = `下载中 (` + saveFile + `)`
+            ret.IsSuccess = true
+
+            go func() {
+                _, body, _, e := api.HTTPGet(url, nil, time.Second*180)
+                if e == nil && len(body) > 0 {
+                    _ = os.WriteFile(saveFile, body, os.ModePerm)
+                }
+            }()
+            return
+        }
+        ret.Msg = `下载失败:` + err.Error()
+    }
+    return
 }

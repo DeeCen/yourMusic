@@ -142,6 +142,20 @@ export namespace main {
 		    return a;
 		}
 	}
+	export class RespMsg {
+	    is_success: boolean;
+	    msg: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new RespMsg(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.is_success = source["is_success"];
+	        this.msg = source["msg"];
+	    }
+	}
 	export class RespSearch {
 	    errMsg: string;
 	    data: api.RespAPISearchSongData;

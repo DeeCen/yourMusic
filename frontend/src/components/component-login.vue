@@ -180,6 +180,20 @@
           size="small"
         />
       </el-form-item>
+
+      <el-form-item
+        v-show="isSettingOpenLyric"
+        label="歌词校正"
+        label-position="right"
+      >
+        <el-slider
+          v-model="currLyricDelayMs"
+          :format-tooltip="formatLyricDelayMs"
+          :min="-10000"
+          :max="10000"
+          :step="500"
+        />
+      </el-form-item>
     </el-form>
   </el-dialog>
 </template>
@@ -204,8 +218,8 @@ import {
     setUserSelectQuality
 } from './sharedVar.js';
 import { ElMessage } from 'element-plus';
-import { LoginByMobile, LoginByToken,SendMobileCode } from '@/wailsjs/go/main/App.js';
-import { isSettingOpenLyric,selectLyricColor } from './lyric.js';
+import { LoginByMobile, LoginByToken, SendMobileCode } from '@/wailsjs/go/main/App.js';
+import { isSettingOpenLyric, selectLyricColor, currLyricDelayMs } from './lyric.js';
 
 const isLoginDialogVisible = ref(false);
 const isShowAbout = ref(false);
@@ -215,20 +229,21 @@ const sendCodeCD = ref(0);
 const isShowSetting = ref(false);
 const userSettingQuality = ref(getUserSelectQuality());
 const sendCodeTips = computed({
-    get: () => '获取验证码' + (sendCodeCD.value>0 ? `(${sendCodeCD.value})`:'' ) ,
+    get: () => '获取验证码' + (sendCodeCD.value > 0 ? `(${sendCodeCD.value})` : '' ),
     set: () => {}
 });
 
 const startCD = () => {
     sendCodeCD.value = 10;
     const timer = setInterval(() => {
-        if (sendCodeCD.value<=0) {
+        if (sendCodeCD.value <= 0) {
             clearInterval(timer);
+
             return;
         }
 
         sendCodeCD.value--;
-    },1000);
+    }, 1000);
 };
 
 const showLoginDialog = () => {
@@ -241,23 +256,28 @@ const showAbout = () => {
 const loginByMobile = async () => {
     if (mobile.value.length !== 11) {
         ElMessage.warning(`请输入11位手机号`);
+
         return;
     }
 
     if (code.value.length !== 6) {
         ElMessage.warning(`请输入6位验证码`);
+
         return;
     }
 
     const resp = await LoginByMobile(mobile.value, code.value);
+
     if (resp.errMsg) {
         ElMessage.warning(resp.errMsg);
+
         return;
     }
 
     updateUserInfoToLocalStorage(resp.data);
-    if (userInfo.token==='') {
+    if (userInfo.token === '') {
         ElMessage.success( '登录失败' );
+
         return;
     }
     ElMessage.success( '登录成功' );
@@ -269,6 +289,7 @@ const getYYYYMMDD = () => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
+
     return `${year}${month}${day}`;
 };
 
@@ -283,34 +304,40 @@ const setLastAutoGetVipDay = () => {
 
 const isAutoGetVipDay = () => {
     const today = getYYYYMMDD();
-    return getLastAutoGetVipDay()!==today;
+
+    return getLastAutoGetVipDay() !== today;
 };
 
 const loginByToken = async (autoGetVip) => {
     console.log('start loginByToken');
-    if (userInfo.token==='' || userInfo.userid===`0` || userInfo.userid===``) {
+    if (userInfo.token === '' || userInfo.userid === `0` || userInfo.userid === ``) {
         console.log('stop loginByToken');
+
         return;
     }
 
     console.log('run loginByToken');
-    const resp = await LoginByToken(userInfo.dfid,userInfo.userid,userInfo.token,autoGetVip?1:0);
+    const resp = await LoginByToken(userInfo.dfid, userInfo.userid, userInfo.token, autoGetVip ? 1 : 0);
+
     updateUserInfoToLocalStorage(resp.data);
 };
 
 const sendMobileCode = async () => {
     if (mobile.value.length !== 11) {
         ElMessage.warning(`请输入11位手机号`);
+
         return;
     }
 
-    if (sendCodeCD.value>0) {
+    if (sendCodeCD.value > 0) {
         return;
     }
 
     const msg = await SendMobileCode(mobile.value);
+
     if (msg) {
         ElMessage.warning(msg);
+
         return;
     }
 
@@ -327,16 +354,23 @@ const userChangeQuality = () => {
     ElMessage.success(`切换音质成功,下一首歌生效`);
 };
 
+const formatLyricDelayMs = (n) => {
+    const pre = n < 0 ? `延迟 ` : `提前 `;
+
+    return pre + (n / 1000).toFixed(1) + ` 秒`;
+};
+
 const logout = () => {
     removeUserInfoToLocalStorage();
 };
 
 const isGetVip = isAutoGetVipDay();
+
 if (readUserInfoFromLocalStorage() && isGetVip) {
     loginByToken(true);//每天只刷新一次token
     setLastAutoGetVipDay();
 }
-if (userInfo.token==='') {
+if (userInfo.token === '') {
     showLoginDialog();
 }
 </script>

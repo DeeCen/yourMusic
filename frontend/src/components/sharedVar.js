@@ -1,5 +1,5 @@
 import { ref, reactive } from 'vue';
-import { GetSongURL } from '@/wailsjs/go/main/App.js';
+import { DownloadSong, GetSongURL } from '@/wailsjs/go/main/App.js';
 import { ElMessage } from 'element-plus';
 import { gzToStr, strToGz } from './gz.js';
 
@@ -141,6 +141,20 @@ export const copySongURL = async (song) => {
     }
 
     ElMessage.warning(`复制失败,请自行复制:` + resp.data[0]);
+};
+
+export const downloadSong = async (song) => {
+    /**@type api.Song */
+    if (!song) {
+        return;
+    }
+    const resp = await DownloadSong(userInfo.dfid, userInfo.userid, userInfo.token, getSongHash(song, songQualityHiRes),song.FileName);
+    if (resp.is_success===false) {
+        ElMessage.warning(resp.msg);
+        return;
+    }
+
+    ElMessage.success(resp.msg);
 };
 
 export const setUserSelectQuality = (flag) => {

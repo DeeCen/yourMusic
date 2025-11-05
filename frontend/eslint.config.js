@@ -15,7 +15,7 @@ const conf = [
         },
         rules: {
             // 关闭组件名校验 Component name xxx should always be multi-word
-            'vue/multi-word-component-names': 'off',
+            // 'vue/multi-word-component-names': 'off',
 
             // 空格
             indent: [
@@ -50,9 +50,32 @@ const conf = [
 
             // if( 括号后添加1格空格
             'keyword-spacing': ['error', { before: true, after: true }],
-
             'arrow-spacing': ['error', { before: true, after: true }],
-
+            'space-infix-ops': 'error',
+            'comma-spacing': ['error', { before: false, after: true }],
+            'semi-spacing': ['error', { before: false, after: true }],
+            'block-spacing': 'error',
+            'padding-line-between-statements': [
+                'error',
+                // 在变量声明（const, let, var）之后，除了 import 和 export，都需要空行
+                { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
+                { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
+                // 在函数声明、函数表达式、类声明、export 之后，需要空行
+                { blankLine: 'always', prev: ['function', 'class', 'export'], next: '*' },
+                { blankLine: 'always', prev: '*', next: ['function', 'class', 'export'] },
+                // 在 import 语句之后，需要空行
+                { blankLine: 'always', prev: 'import', next: '*' },
+                { blankLine: 'any', prev: 'import', next: 'import' },
+                // 在 return 语句之前，需要空行
+                { blankLine: 'always', prev: '*', next: 'return' },
+                // 在块语句（block）之后，需要空行？这通常不强制，但可以根据需要配置
+                // 注意：块语句（block）是指由 {} 括起来的代码块，但这里我们可能不希望在块内的语句之间强制空行，所以需要谨慎。
+                // 以下配置可选的，根据你的喜好添加
+                // 在 if 语句、for 语句、while 语句等之后，通常不强制空行，但有时在它们之后和下一个语句之间需要空行。
+                // 例如：在 if 语句块之后和接下来的语句之间空一行
+                // { blankLine: "always", prev: "block", next: "*" },
+                // 但是，注意这样可能会在代码中插入很多空行，所以请根据团队风格决定。
+            ],
             curly: ['error', 'all'], // 所有控制语句都必须使用花括号
         },
     },
