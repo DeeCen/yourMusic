@@ -348,7 +348,6 @@ const customGetSongURL = async function (audioElement, audio, player) {
     autoShowLyric(audio.lrc, player);
     addBgColor('app');
     WindowSetTitle(audio.name);
-    console.log('player debug', player.play, typeof player.play);
     if (player && typeof player.play === 'function') {
         try {
             player.play();

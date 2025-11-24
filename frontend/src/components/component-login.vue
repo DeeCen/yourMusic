@@ -215,7 +215,7 @@ import {
     readUserInfoFromLocalStorage,
     removeUserInfoToLocalStorage,
     getUserSelectQuality,
-    setUserSelectQuality
+    setUserSelectQuality, initSharedVarOnce
 } from './sharedVar.js';
 import { ElMessage } from 'element-plus';
 import { LoginByMobile, LoginByToken, SendMobileCode } from '@/wailsjs/go/main/App.js';
@@ -354,6 +354,10 @@ const userChangeQuality = () => {
     ElMessage.success(`切换音质成功,下一首歌生效`);
 };
 
+/**
+ * @param {number} n
+ * @returns {string|number}
+ */
 const formatLyricDelayMs = (n) => {
     const pre = n < 0 ? `延迟 ` : `提前 `;
 
@@ -373,6 +377,12 @@ if (readUserInfoFromLocalStorage() && isGetVip) {
 if (userInfo.token === '') {
     showLoginDialog();
 }
+
+initSharedVarOnce().then(() => {
+    console.log(`initSharedVar success`);
+}).catch((e) => {
+    console.log(`initSharedVar error`, e);
+});
 </script>
 
 <style>

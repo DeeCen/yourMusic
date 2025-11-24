@@ -20,14 +20,8 @@ import Search from './components/component-search.vue';
 import Login from './components/component-login.vue';
 import Agreement from './components/component-agreement.vue';
 import Player from './components/component-player.vue';
-import { initSharedVarOnce } from './components/sharedVar.js';
 import { addBgColor } from '@/src/components/bgColor.js';
 
-initSharedVarOnce().then(() => {
-    console.log(`initSharedVar success`);
-}).catch((e) => {
-    console.log(`initSharedVar error`, e);
-});
 addBgColor('app');
 </script>
 
