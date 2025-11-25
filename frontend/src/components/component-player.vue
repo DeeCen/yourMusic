@@ -294,7 +294,7 @@ const customGetSongURL = async function (audioElement, audio, player) {
     const hash = getSongHash(audio, quality);
 
     if (audio.url === '' || hash !== audio.urlHash) {
-        console.log('2 执行更新获取歌曲地址', audio.name, quality, hash);
+        console.log('2 执行更新获取歌曲地址', audio.name, quality, hash, userInfo.token);
         const resp = await GetSongURL(userInfo.dfid, userInfo.userid, userInfo.token, hash);
 
         console.log('3 执行更新获取歌曲地址', audio.name, resp);

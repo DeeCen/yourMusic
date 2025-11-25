@@ -369,20 +369,24 @@ const logout = () => {
 };
 
 const isGetVip = isAutoGetVipDay();
+let isDoInit = Promise.resolve();
 
 if (readUserInfoFromLocalStorage() && isGetVip) {
-    loginByToken(true);//每天只刷新一次token
-    setLastAutoGetVipDay();
-}
-if (userInfo.token === '') {
-    showLoginDialog();
+    //每天只刷新一次token
+    isDoInit = loginByToken(true);
 }
 
-initSharedVarOnce().then(() => {
-    console.log(`initSharedVar success`);
-}).catch((e) => {
-    console.log(`initSharedVar error`, e);
+isDoInit.then(() => {
+    console.log('do init...');
+
+    setLastAutoGetVipDay();
+    initSharedVarOnce();
+
+    if (userInfo.token === '') {
+        showLoginDialog();
+    }
 });
+isDoInit = null;
 </script>
 
 <style>
