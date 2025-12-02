@@ -75,9 +75,8 @@ func autoGetVip(dfid string, userid int, token string) {
         return
     }
 
-    go func() {
-        _ = api.FreeVipAll(dfid, strconv.Itoa(userid), token)
-    }()
+    _ = api.FreeVipAll(dfid, strconv.Itoa(userid), token)
+    return
 }
 
 // LoginByMobile 手机号登录
